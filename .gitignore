@@ -84,3 +84,4 @@ supabase/.env
 supabase/.env.local
 .vercel
 .env*.local
+3.2.json

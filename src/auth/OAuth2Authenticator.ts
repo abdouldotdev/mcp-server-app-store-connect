@@ -7,6 +7,7 @@
 import jwt, { JwtPayload } from 'jsonwebtoken'
 import jwksClient from 'jwks-rsa'
 import fetch from 'node-fetch'
+import { logger } from '../logger.js'
 import {
   OAuthConfig,
   AuthContext,
@@ -62,23 +63,23 @@ export class OAuth2Authenticator {
     try {
       // Try JWT validation first (faster)
       context = await this.validateJWT(token)
-      console.log('✅ JWT validation successful')
+      logger.info('✅ JWT validation successful')
     } catch (jwtError) {
       const errorMsg = jwtError instanceof Error ? jwtError.message : String(jwtError)
       
       // Check if this is an opaque token (not a JWT)
       if (errorMsg.includes('not a valid JWT format') || errorMsg.includes('opaque token')) {
-        console.log('📝 Token appears to be an opaque access token, using Auth0 userinfo validation')
+        logger.info('📝 Token appears to be an opaque access token, using Auth0 userinfo validation')
       } else {
-        console.log('⚠️ JWT validation failed:', errorMsg)
+        logger.info('⚠️ JWT validation failed:', errorMsg)
       }
       
       try {
         // Fallback to Auth0 userinfo validation (for opaque tokens)
         context = await this.validateOpaqueToken(token)
       } catch (opaqueError) {
-        console.error('❌ Opaque token validation failed:', opaqueError instanceof Error ? opaqueError.message : String(opaqueError))
-        console.error('   Token preview:', token.substring(0, 20) + '...')
+        logger.error('❌ Opaque token validation failed:', opaqueError instanceof Error ? opaqueError.message : String(opaqueError))
+        logger.error('   Token preview:', token.substring(0, 20) + '...')
         throw this.createAuthError('invalid_token', 'Token validation failed - neither JWT nor valid opaque token')
       }
     }
@@ -193,7 +194,7 @@ export class OAuth2Authenticator {
     // For Auth0 opaque tokens, use the /userinfo endpoint
     const userinfoEndpoint = `${this.config.issuer}/userinfo`
     
-    console.log(`🔍 Validating opaque token via userinfo endpoint: ${userinfoEndpoint}`)
+    logger.info(`🔍 Validating opaque token via userinfo endpoint: ${userinfoEndpoint}`)
 
     try {
       const response = await fetch(userinfoEndpoint, {
@@ -205,15 +206,15 @@ export class OAuth2Authenticator {
 
       if (!response.ok) {
         const errorText = await response.text()
-        console.error(`❌ Auth0 userinfo validation failed: ${response.status} ${errorText}`)
+        logger.error(`❌ Auth0 userinfo validation failed: ${response.status} ${errorText}`)
         throw new Error(`Token validation failed: ${response.status} ${response.statusText}`)
       }
 
       const userInfo = await response.json() as any
-      console.log(`✅ Token validation successful via Auth0 userinfo endpoint`)
-      console.log(`  ↳ User ID: ${userInfo.sub}`)
-      console.log(`  ↳ Email: ${userInfo.email || 'N/A'}`)
-      console.log(`  ↳ Name: ${userInfo.name || 'N/A'}`)
+      logger.info(`✅ Token validation successful via Auth0 userinfo endpoint`)
+      logger.info(`  ↳ User ID: ${userInfo.sub}`)
+      logger.info(`  ↳ Email: ${userInfo.email || 'N/A'}`)
+      logger.info(`  ↳ Name: ${userInfo.name || 'N/A'}`)
 
       return {
         isAuthenticated: true,
@@ -231,7 +232,7 @@ export class OAuth2Authenticator {
         }
       }
     } catch (error) {
-      console.error(`❌ Token validation via Auth0 userinfo failed:`, error instanceof Error ? error.message : String(error))
+      logger.error(`❌ Token validation via Auth0 userinfo failed:`, error instanceof Error ? error.message : String(error))
       throw new Error('Token validation failed')
     }
   }

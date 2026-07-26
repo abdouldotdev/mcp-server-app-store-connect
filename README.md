@@ -1,158 +1,105 @@
-# Apple Store Connect MCP Server
+# App Store Connect MCP (complete)
 
-A Model Context Protocol (MCP) server that provides tools for interacting with Apple Store Connect API, enabling management of iOS/macOS apps, TestFlight, app metadata, and more through Claude Desktop or other MCP clients.
+An MCP server that gives Claude real access to the App Store Connect API: read your
+listings, audit every localization, upload screenshots for a dozen languages in one
+call, submit for review, manage pricing and answer customer reviews — without leaving
+the conversation.
 
-## Features
+**86 tools** across apps, versions, localizations, screenshots, review submission,
+phased release, customer reviews, pricing, in-app purchases, territories and code
+signing.
 
-### App Management
-- **List Apps**: View all apps in your App Store Connect account
-- **App Information**: Get detailed app info including status and metadata
-- **App Store Versions**: Create and manage app store versions
-- **Localization**: Update app descriptions and metadata for different markets
+## Why this exists
 
-### Analytics & Sales
-- **Sales Data**: Retrieve sales and revenue information
-- **Analytics**: Access app analytics including installs and user engagement
-- **Customer Reviews**: Read and analyze customer feedback
-- **Pricing Information**: View current app pricing across different regions
+Doing App Store release work by hand means clicking through the same forms once per
+language, per device size, per app. The API can do all of it, but its resource model is
+unfriendly — prices hide behind opaque `appPricePoint` ids, screenshots need a
+three-step reserve/upload/commit dance, and half the useful filters are undocumented.
 
-### TestFlight Integration
-- **Build Management**: View TestFlight builds and their status
-- **Beta Groups**: Manage TestFlight beta testing groups
-- **Tester Management**: Add and manage beta testers
+This server hides that. You give it a price in euros and a country code; it finds the
+price tier. You give it a directory of PNGs; it validates the dimensions, creates the
+sets and uploads them in the right order.
 
-### Additional Features
-- **In-App Purchases**: View and manage in-app purchase products
-- **App Availability**: Check app availability across different regions
-- **Category & Rating**: Access app category and age rating information
-
-## Setup
-
-### Prerequisites
-- Node.js 18+
-- Apple Developer Account with App Store Connect access
-- App Store Connect API key
-
-### Apple Store Connect API Key Setup
-
-1. **Generate API Key**:
-   - Go to [App Store Connect](https://appstoreconnect.apple.com)
-   - Navigate to Users and Access → Integrations → App Store Connect API
-   - Create a new API key with appropriate permissions
-
-2. **Environment Variables**:
-   ```bash
-   APPLE_KEY_ID=your_key_id
-   APPLE_ISSUER_ID=your_issuer_id  
-   APPLE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----
-   your_private_key_content
-   -----END PRIVATE KEY-----"
-   APPLE_BUNDLE_ID=com.yourcompany.yourapp
-   ```
-
-### Installation
+## Install
 
 ```bash
-# Clone the repository
-git clone https://github.com/ryaker/appstore-connect-mcp.git
-cd appstore-connect-mcp
-
-# Install dependencies
-npm install
-
-# Build the project
-npm run build
-
-# Start the server
-npm start
+git clone https://github.com/Prodevking1/appstore-connect-mcp-complete.git
+cd appstore-connect-mcp-complete
+npm install && npm run build
 ```
 
-### Claude Desktop Configuration
+Create a `.env` next to the server (see `.env.example`):
 
-Add to your Claude Desktop `claude_desktop_config.json`:
-
-```json
-{
-  "mcpServers": {
-    "appstore-connect": {
-      "command": "node",
-      "args": ["/path/to/appstore-connect-mcp/dist/src/index.js"],
-      "env": {
-        "APPLE_KEY_ID": "your_key_id",
-        "APPLE_ISSUER_ID": "your_issuer_id",
-        "APPLE_PRIVATE_KEY": "your_private_key",
-        "APPLE_BUNDLE_ID": "com.yourcompany.yourapp"
-      }
-    }
-  }
-}
+```ini
+APPLE_KEY_ID=ABC123DEFG
+APPLE_ISSUER_ID=00000000-0000-0000-0000-000000000000
+APPLE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----
+...contents of your AuthKey_XXXXXX.p8...
+-----END PRIVATE KEY-----"
+APPLE_BUNDLE_ID=com.example.app
 ```
 
-## Usage
+Generate the key at **App Store Connect → Users and Access → Integrations → App Store
+Connect API**. The `.p8` file downloads only once. An **App Manager + Sales and Reports**
+key covers everything except the code signing tools, which need **Admin** or
+**Developer**.
 
-Once configured, you can ask Claude to:
+Register the server (the `cd` matters — credentials are read from the working
+directory):
 
-- "Show me my app's latest sales data"
-- "List all TestFlight builds for my app"
-- "What are the recent customer reviews?"
-- "Create a new app store version"
-- "Add a beta tester to my TestFlight group"
-
-## Remote Deployment with OAuth
-
-### Auth0 Setup (for Remote Access)
-
-1. **Create Auth0 API**:
-   - Log into [Auth0 Dashboard](https://manage.auth0.com)
-   - Create new API (not Application)
-   - Note the Identifier (becomes your audience)
-
-2. **Configure OAuth Settings**:
-```env
-OAUTH_ENABLED=true
-AUTH0_DOMAIN=https://your-tenant.auth0.com
-AUTH0_AUDIENCE=https://your-api-identifier
-```
-
-3. **Deploy to Vercel**:
 ```bash
-vercel --prod
+claude mcp add appstore-connect -s user -- \
+  sh -c 'cd /absolute/path/to/appstore-connect-mcp-complete && exec node dist/index.js'
 ```
 
-4. **Configure Claude Desktop for Remote Access**:
-```json
-{
-  "mcpServers": {
-    "appstore-connect": {
-      "url": "https://your-deployment.vercel.app/mcp"
-    }
-  }
-}
-```
+## What you can do
 
-Claude will automatically discover OAuth configuration and handle authentication.
+| Area | Highlights |
+|---|---|
+| **Diagnostics** | `get_app_release_status` answers "where do I stand?" — version, state, attached build, in-flight submission, phased release, and the next action to take |
+| **Localizations** | List every locale with its id, read any listing with per-field character counts against Apple's limits, diagnose which locales block submission |
+| **Screenshots** | Batch upload from `<dir>/<locale>/<DISPLAY_TYPE>/*.png`, with local dimension validation before anything is sent, and cleanup of the reservation if an upload fails |
+| **Submission** | Modern `reviewSubmissions` API, one-shot submit, phased release control, manual release |
+| **Reviews** | Filter unanswered reviews, rating distribution and trend, publish or bulk-publish responses |
+| **Pricing** | Give a price in currency, the server resolves Apple's price tier; schedule promotions; add or remove territories without re-listing all 175 |
+| **Code signing** | Certificates, bundle ids, capabilities, devices, profiles, plus a health check for what expires soon |
 
-## Authentication
+## Safety
 
-This server supports two authentication modes:
-- **Local**: Direct API key authentication with Apple Store Connect
-- **Remote**: OAuth 2.0 via Auth0 for secure remote access
+This server can take actions that are public and irreversible. Three things guard that:
 
-## Requirements
+- **`confirm: true` is required** on every destructive, public or irreversible tool —
+  submitting to review, releasing, changing prices, delisting territories, replying to
+  reviews, revoking certificates. Without it the tool refuses and explains what it
+  would have done. `bulk_respond_to_reviews` returns a full dry run.
+- **stdio by default.** No network port is opened. The optional HTTP transport
+  (`TRANSPORT=http`) refuses to bind a non-loopback interface unless OAuth or
+  `MCP_HTTP_TOKEN` is configured.
+- **Nothing about your key is logged.** All diagnostics go to stderr, redacted.
 
-- Valid Apple Developer Program membership
-- App Store Connect access
-- API key with appropriate permissions (typically App Manager or Admin)
+## Adding a tool
 
-## License
+Tools live in `src/tools/`, one module per domain, collected in a registry that fails
+loudly on duplicate names. Adding one means creating a file and adding a line. See
+[CONTRIBUTING.md](CONTRIBUTING.md).
 
-MIT License - see LICENSE file for details
+Apple publishes an OpenAPI specification for this API. Keeping it next to the repo as
+`3.2.json` is the fastest way to settle a question about a payload shape — it is
+gitignored rather than vendored.
 
-## Contributing
+## Status
 
-Contributions welcome! Please read our contributing guidelines and submit pull requests for any improvements.
+Read paths are verified against a live account with 18 apps. Write paths follow Apple's
+OpenAPI specification and are guarded by `confirm`, but most have not been exercised
+against production data — the tool descriptions state what each one does before it does
+it.
 
-## Support
+## Credits
 
-- Create an issue for bugs or feature requests
-- Check Apple's App Store Connect API documentation for API-specific questions
+Built on the foundation of
+[ryaker/appstore-connect-mcp](https://github.com/ryaker/appstore-connect-mcp), itself
+derived from earlier work by Joshua Riley. The JWT authentication approach comes from
+that lineage; the transport, the tool registry and the large majority of the tools are
+new.
+
+MIT licensed — see [LICENSE](LICENSE) for the full copyright chain.
