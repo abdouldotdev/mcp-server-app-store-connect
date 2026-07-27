@@ -49,7 +49,6 @@ export function getAppStoreConfig(): AppStoreConfig {
     issuerId: (process.env.APPLE_ISSUER_ID || '').trim(),
     privateKey,
     bundleId: (process.env.APPLE_BUNDLE_ID || '').trim(),
-    appStoreId: process.env.APPLE_APP_STORE_ID?.trim(),
     vendorNumber: process.env.APPLE_VENDOR_NUMBER?.trim(),
   };
 

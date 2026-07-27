@@ -19,7 +19,6 @@ export interface AppStoreConfig {
   issuerId: string;
   privateKey: string;
   bundleId: string;
-  appStoreId?: string;
   /** Vendor number used by the sales/finance report endpoints. */
   vendorNumber?: string;
 }
