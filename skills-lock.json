@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "app-store-release": {
+      "source": "abdouldotdev/mcp-server-app-store-connect",
+      "sourceType": "github",
+      "skillPath": "skills/app-store-release/SKILL.md",
+      "computedHash": "93c82506297e55b14064427e20c6a76f9bbbda9b1a52627f7358e783cd58bc8e"
+    }
+  }
+}
