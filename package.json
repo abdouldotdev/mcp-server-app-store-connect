@@ -11,11 +11,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Prodevking1/mcp-server-app-store-connect.git"
+    "url": "git+https://github.com/abdouldotdev/mcp-server-app-store-connect.git"
   },
-  "homepage": "https://github.com/Prodevking1/mcp-server-app-store-connect#readme",
+  "homepage": "https://github.com/abdouldotdev/mcp-server-app-store-connect#readme",
   "bugs": {
-    "url": "https://github.com/Prodevking1/mcp-server-app-store-connect/issues"
+    "url": "https://github.com/abdouldotdev/mcp-server-app-store-connect/issues"
   },
   "keywords": [
     "mcp",

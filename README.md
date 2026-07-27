@@ -23,7 +23,7 @@ sets and uploads them in the right order.
 ## Install
 
 ```bash
-git clone https://github.com/Prodevking1/mcp-server-app-store-connect.git
+git clone https://github.com/abdouldotdev/mcp-server-app-store-connect.git
 cd mcp-server-app-store-connect
 npm install && npm run build
 ```
