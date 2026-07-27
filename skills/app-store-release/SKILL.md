@@ -90,6 +90,46 @@ did not mention — no build attached, or a submission stuck in `UNRESOLVED_ISSU
 | `REJECTED` | Editable, **but an open submission usually remains**. Resolve or withdraw it first, or the resubmission fails. |
 | `READY_FOR_SALE` | Live. Changes need a new version. |
 
+## Playbooks
+
+### Ship a new version
+
+1. `get_app_release_status`. If no build is attached, **stop** — builds are uploaded
+   from Xcode or Transporter, not through this API. Tell the user that.
+2. `localizations_diagnose`, then fill each gap with
+   `update_app_store_version_localization`.
+3. `screenshots_version_overview`, then `screenshots_upload_batch` for whatever is
+   missing.
+4. `set_version_release_type` — suggest `MANUAL` for anything significant, so approval
+   and publication stay two separate decisions.
+5. Show the user the complete plan. **Then**, on their word,
+   `submit_app_store_version_for_review` with `confirm: true`.
+6. Once Apple approves, `enable_phased_release` before
+   `release_app_store_version` — a 7-day rollout you can pause beats an instant one
+   you cannot.
+
+### Add a language to an existing version
+
+1. `localizations_supported_locales` to get the exact code — never construct it.
+2. `localizations_create`.
+3. `update_app_store_version_localization` for description, keywords and what's new.
+4. `screenshots_upload_batch` scoped to that locale.
+5. `localizations_diagnose` to confirm nothing is left incomplete.
+
+### Triage the review queue
+
+1. `summarize_customer_reviews` for the shape of it — distribution, average, how many
+   are unanswered.
+2. `search_customer_reviews` with `answered: false`, sorted by date or rating.
+3. Draft replies, show them all, and post only the ones the user approves, one call
+   each with `confirm: true`.
+
+### Audit an entire account
+
+`list_apps` returns every app with its live state. Loop `get_app_release_status` over
+them to find what is stalled, rejected, or waiting on a developer release. This is the
+question the web UI cannot answer at all.
+
 ## Listings, in every language
 
 This is where the time goes, so it is worth doing in the right order.
@@ -178,3 +218,20 @@ fix is a new key, not a retry.
 `check_signing_health` is worth running before a release. It reports certificates
 expiring soon and profiles already invalid, which is the failure that otherwise
 surfaces at the worst moment.
+
+## When something fails
+
+Apple's errors are terse. These are the ones you will actually meet:
+
+| What you see | What it means |
+|---|---|
+| `403` on any certificate, profile or device tool | The API key lacks the Admin or Developer role. A new key is the fix; retrying is not. |
+| "The version string X has already been used" | That version already exists. Read `list_app_store_versions` and pick the next number. |
+| Submission fails on an app that looks editable | A submission is already open — Apple allows one per app. `list_review_submissions`, then resolve or `cancel_review_submission`. |
+| `404` on a phased release | None is configured. That is normal, not an error. |
+| A locale code is rejected | The code is wrong, not the content. Check `localizations_supported_locales`. |
+| Screenshot rejected on dimensions | The file genuinely does not match the display type. The error names the accepted sizes. |
+| Counts look truncated on a huge account | Pagination stops at 50 pages. Narrow the query rather than trusting the total. |
+
+When an error is not in this table, surface Apple's own `detail` message to the user
+rather than paraphrasing it — it is usually specific enough to act on.
