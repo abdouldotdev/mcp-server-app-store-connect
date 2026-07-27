@@ -1,4 +1,4 @@
-# App Store Connect MCP (complete)
+# mcp-server-app-store-connect
 
 An MCP server that gives Claude real access to the App Store Connect API: read your
 listings, audit every localization, upload screenshots for a dozen languages in one
@@ -23,8 +23,8 @@ sets and uploads them in the right order.
 ## Install
 
 ```bash
-git clone https://github.com/Prodevking1/appstore-connect-mcp-complete.git
-cd appstore-connect-mcp-complete
+git clone https://github.com/Prodevking1/mcp-server-app-store-connect.git
+cd mcp-server-app-store-connect
 npm install && npm run build
 ```
 
@@ -49,7 +49,7 @@ directory):
 
 ```bash
 claude mcp add appstore-connect -s user -- \
-  sh -c 'cd /absolute/path/to/appstore-connect-mcp-complete && exec node dist/index.js'
+  sh -c 'cd /absolute/path/to/mcp-server-app-store-connect && exec node dist/index.js'
 ```
 
 ## What you can do
