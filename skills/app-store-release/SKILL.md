@@ -3,7 +3,26 @@ name: app-store-release
 description: Run App Store releases end to end from the conversation — diagnose what blocks a version, audit and write listings in every language, upload localized screenshots, submit for review, control the rollout, and handle pricing, territories and customer reviews. Use for any App Store Connect task, and read it before calling the App Store Connect MCP tools.
 ---
 
-# Shipping to the App Store
+# 🚀 App Store Release
+
+Run an entire App Store release from the conversation — diagnose what blocks a version,
+write the listing in every language, upload localized screenshots, submit, and control
+the rollout.
+
+Requires the [`mcp-server-app-store-connect`](https://github.com/abdouldotdev/mcp-server-app-store-connect)
+MCP server (86 tools over Apple's App Store Connect API).
+
+## When to use
+
+- "Why can't I submit this app?" / "Where does this version stand?"
+- "Which of my languages are incomplete?"
+- "Upload these screenshots for all my locales"
+- "Translate the App Store listing into German and Japanese"
+- "Submit the app for review" / "Release the approved version"
+- "Which reviews are still waiting for a reply?"
+- "Change the price to €4.99" / "Add these countries"
+- Any task naming App Store Connect, TestFlight builds, app metadata, keywords,
+  screenshots, phased release, or App Store reviews.
 
 ## What this is for
 
